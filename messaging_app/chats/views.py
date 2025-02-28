@@ -7,6 +7,15 @@ from rest_framework.decorators import action
 from .models import Conversation, Message, CustomUser
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsConversationParticipant, IsMessageSenderOrConversationParticipant
+from rest_framework.pagination import PageNumberPagination
+from django_filters import rest_framework as filters
+from .filters import MessageFilter  # Import the filter class
+from .pagination import MessagePagination  # Import the pagination class
+
+class MessagePagination(PageNumberPagination):
+    page_size = 20  # Number of messages per page
+    page_size_query_param = 'page_size'  # Allow users to set the page size via query parameter
+    max_page_size = 100  # Maximum page size allowed
 
 # Conversation ViewSet
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -15,7 +24,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated, IsConversationParticipant]  # Add permission to ensure the user is part of the conversation
+    permission_classes = [IsAuthenticated, IsConversationParticipant]
 
     def get_queryset(self):
         """
@@ -65,7 +74,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsMessageSenderOrConversationParticipant]  # Ensure only the sender or participants can access the message
+    permission_classes = [IsAuthenticated, IsMessageSenderOrConversationParticipant]
+    pagination_class = MessagePagination  # Set pagination for this viewset
+    filter_backends = (filters.DjangoFilterBackend,)  # Add the filter backend
+    filterset_class = MessageFilter  # Apply the MessageFilter for filtering
 
     def get_queryset(self):
         """
