@@ -3,8 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
 from .models import Conversation, Message, CustomUser
 from .serializers import ConversationSerializer, MessageSerializer
+from .permissions import IsConversationParticipant, IsMessageSenderOrConversationParticipant
 
 # Conversation ViewSet
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -13,7 +15,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsConversationParticipant]  # Add permission to ensure the user is part of the conversation
+
+    def get_queryset(self):
+        """
+        Limit the conversations to those that the current user is a participant.
+        """
+        return Conversation.objects.filter(participants=self.request.user)
 
     def create(self, request, *args, **kwargs):
         """
@@ -36,6 +44,19 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['get'])
+    def messages(self, request, pk=None):
+        """
+        Retrieve all messages from a specific conversation.
+        """
+        conversation = get_object_or_404(Conversation, pk=pk)
+
+        # Ensure the user is part of the conversation before fetching messages
+        self.check_object_permissions(request, conversation)
+
+        messages = conversation.messages.all()
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
 
 # Message ViewSet
 class MessageViewSet(viewsets.ModelViewSet):
@@ -44,7 +65,13 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsMessageSenderOrConversationParticipant]  # Ensure only the sender or participants can access the message
+
+    def get_queryset(self):
+        """
+        Limit the messages to the current user's conversations.
+        """
+        return Message.objects.filter(conversation__participants=self.request.user)
 
     def create(self, request, *args, **kwargs):
         """
