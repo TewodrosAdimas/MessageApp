@@ -9,6 +9,5 @@ router.register(r'conversations', ConversationViewSet)
 router.register(r'messages', MessageViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),  # Include the API routes under /api/
 ]
