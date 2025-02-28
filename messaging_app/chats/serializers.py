@@ -1,11 +1,19 @@
 from rest_framework import serializers
 from .models import CustomUser, Conversation, Message
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
-        model = CustomUser
-        fields = ['id', 'username', 'email', 'bio', 'profile_picture']
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'bio', 'profile_picture']
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 # Message Serializer
 class MessageSerializer(serializers.ModelSerializer):
