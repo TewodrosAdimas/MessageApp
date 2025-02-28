@@ -10,7 +10,6 @@ from .permissions import IsConversationParticipant, IsMessageSenderOrConversatio
 from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
 from .filters import MessageFilter  # Import the filter class
-from .pagination import MessagePagination  # Import the pagination class
 
 class MessagePagination(PageNumberPagination):
     page_size = 20  # Number of messages per page
