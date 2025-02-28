@@ -5,7 +5,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from .models import Conversation, Message, CustomUser
-from .serializers import ConversationSerializer, MessageSerializer
+from .serializers import ConversationSerializer, MessageSerializer, RegisterSerializer
 from .permissions import IsConversationParticipant, IsMessageSenderOrConversationParticipant
 from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
@@ -25,17 +25,14 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "user": serializer.data,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh)
-            }, status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "User registered successfully!", "user_id": user.id},
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class MessagePagination(PageNumberPagination):
     page_size = 20  # Number of messages per page
     page_size_query_param = 'page_size'  # Allow users to set the page size via query parameter
