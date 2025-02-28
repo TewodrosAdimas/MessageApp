@@ -3,9 +3,8 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
-    LoginView,
 )
-from chats.views import ConversationViewSet, MessageViewSet, RegisterView
+from chats.views import ConversationViewSet, MessageViewSet, RegisterView, LoginView
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
