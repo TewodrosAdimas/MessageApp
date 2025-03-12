@@ -1,0 +1,13 @@
+2025-03-12 11:09:37.632989 - User: Anonymous - Path: /
+Not Found: /
+2025-03-12 11:09:38.251241 - User: Anonymous - Path: /favicon.ico
+Not Found: /favicon.ico
+2025-03-12 11:09:45.390378 - User: Anonymous - Path: /register/
+Method Not Allowed: /register/
+2025-03-12 11:10:05.972575 - User: Anonymous - Path: /
+Not Found: /
+2025-03-12 11:10:13.602674 - User: Anonymous - Path: /login/
+Method Not Allowed: /login/
+2025-03-12 11:10:21.373026 - User: Anonymous - Path: /admin/
+2025-03-12 11:10:21.391541 - User: Anonymous - Path: /admin/login/
+2025-03-12 11:10:23.465762 - User: Anonymous - Path: /admin/login/
