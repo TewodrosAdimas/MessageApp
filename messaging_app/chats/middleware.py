@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+from django.http import JsonResponse
+from django.utils import timezone
 
 # Create a logger instance
 logger = logging.getLogger('django')
@@ -27,4 +29,32 @@ class RequestLoggingMiddleware:
         # Proceed to the next middleware or view
         response = self.get_response(request)
         
+        return response
+
+
+class RestrictAccessByTimeMiddleware:
+    """
+    Middleware that restricts access to the messaging system outside 9 PM and 6 PM.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Get the current time in the server's local timezone
+        current_hour = timezone.localtime(timezone.now()).hour
+        
+        # Restrict access to the chat between 6 AM and 9 PM
+        if current_hour < 9 or current_hour >= 18:
+            # If the request is outside of the allowed hours, deny access
+            return JsonResponse(
+                {"error": "Access to the messaging system is restricted between 9 PM and 6 PM."},
+                status=403
+            )
+
+        # Log the request information (after time check)
+        user = request.user if request.user.is_authenticated else 'Anonymous'
+        logger.info(f"{datetime.now()} - User: {user} - Path: {request.path}")
+        
+        # Otherwise, allow the request to proceed
+        response = self.get_response(request)
         return response
