@@ -10,14 +10,16 @@ from .permissions import IsConversationParticipant, IsMessageSenderOrConversatio
 from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
 from .filters import MessageFilter  # Import the filter class
-from .serializers import UserSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer
 from django.shortcuts import render
+from django.contrib.auth import get_user_model
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
+User = get_user_model()
 
 User = get_user_model()
 
@@ -148,3 +150,13 @@ def message_history(request, message_id):
     message = Message.objects.get(id=message_id)
     history = message.history.all()  # Retrieve all message history
     return render(request, "message_history.html", {"message": message, "history": history})
+
+def delete_user(request):
+    user = request.user
+    if request.method == 'POST':
+        # Perform deletion if user confirms
+        user.delete()
+        messages.success(request, "Your account has been deleted successfully.")
+        return redirect('home')  # Redirect to a home page or login page after deletion
+
+    return render(request, 'delete_user.html', {'user': user})
