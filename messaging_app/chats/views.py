@@ -16,6 +16,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LoginSerializer
+from django.shortcuts import render
 
 
 User = get_user_model()
@@ -140,3 +141,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(message)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+def message_history(request, message_id):
+    message = Message.objects.get(id=message_id)
+    history = message.history.all()  # Retrieve all message history
+    return render(request, "message_history.html", {"message": message, "history": history})
