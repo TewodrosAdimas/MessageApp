@@ -23,6 +23,7 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    edited = models.BooleanField(default=False)  # New field to track if a message is edited
 
     class Meta:
         ordering = ["timestamp"]
@@ -38,3 +39,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username} - Message {self.message.id}"
+
+class MessageHistory(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="history")
+    old_content = models.TextField()  # Store the old message content
+    timestamp = models.DateTimeField(auto_now_add=True)  # Timestamp when the history was created
+
+    def __str__(self):
+        return f"History for Message {self.message.id} - Edited at {self.timestamp}"
