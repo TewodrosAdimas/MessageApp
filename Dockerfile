@@ -19,5 +19,13 @@ EXPOSE 8000
 # Set the environment variable to avoid Python writing .pyc files to disk
 ENV PYTHONUNBUFFERED 1
 
-# Run the Django app on port 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+
+# Copy the wait-for-it.sh script
+COPY wait-for-it /app/
+
+# Set execute permissions for the script
+RUN chmod +x /app/wait-for-it.sh
+
+# Run the Django app, ensuring MySQL is ready first
+CMD ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]

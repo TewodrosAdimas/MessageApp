@@ -11,3 +11,4 @@ Method Not Allowed: /login/
 2025-03-12 11:10:21.373026 - User: Anonymous - Path: /admin/
 2025-03-12 11:10:21.391541 - User: Anonymous - Path: /admin/login/
 2025-03-12 11:10:23.465762 - User: Anonymous - Path: /admin/login/
+/app/messaging_app/settings.py changed, reloading.
