@@ -67,9 +67,117 @@ All responses are returned in **JSON** format. For example:
 }
 ```
 
-## Notes
-- **Authentication Required**: JWT authentication is required for most endpoints. The token should be included in the `Authorization` header as a Bearer token.
-- **Refresh Tokens**: When the `access_token` expires, a `refresh_token` can be used to obtain a new access token.
-- **Anonymous Users**: Some endpoints are accessible to all users, including anonymous ones (like registration and login).
+## Docker & Docker Compose Implementation
 
----
+This project is containerized using **Docker** and **Docker Compose** for easy deployment and scalability.
+
+### Docker
+
+The **Dockerfile** is used to define the steps for building the Docker image for the Messaging API service. Here's an overview of the key steps:
+
+- **Base Image**: The Dockerfile starts by using the official Python 3.10 image from Docker Hub.
+- **Install Dependencies**: It then installs the Python dependencies listed in the `requirements.txt` file.
+- **Copy Application Code**: The application code (including Django) is copied into the container.
+- **Expose Port**: The container exposes port `8000`, allowing access to the Django application.
+- **Wait-for-it Script**: The `wait-for-it.sh` script is copied into the container, ensuring that the MySQL database is ready before starting the Django application.
+
+Here is the relevant Dockerfile for this project:
+```Dockerfile
+# Use the official Python 3.10 image from Docker Hub as the base image
+FROM python:3.10
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements.txt file into the container
+COPY requirements.txt /app/
+
+# Install dependencies from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire project code into the container
+COPY messaging_app /app/
+
+# Expose port 8000 for the Django app
+EXPOSE 8000
+
+# Set the environment variable to avoid Python writing .pyc files to disk
+ENV PYTHONUNBUFFERED 1
+
+# Copy the wait-for-it.sh script
+COPY wait-for-it /app/
+
+# Set execute permissions for the script
+RUN chmod +x /app/wait-for-it.sh
+
+# Run the Django app, ensuring MySQL is ready first
+CMD ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+```
+
+### Docker Compose
+
+We use **Docker Compose** to define and run multi-container applications. The `docker-compose.yml` file defines two services: `db` (MySQL) and `web` (the Django app). It ensures that the web service waits for the MySQL database service to be ready before starting the application.
+
+Key components of the `docker-compose.yml` file:
+- **db**: The MySQL database service, using the official `mysql:8.0` image. Environment variables are set for database credentials.
+- **web**: The Django app service, which is built from the current directory. The `wait-for-it.sh` script ensures that MySQL is available before starting the Django app.
+- **Volumes**: A volume is defined to persist MySQL data across container restarts.
+
+Here's the relevant `docker-compose.yml` for this project:
+```yaml
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: messaging_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  web:
+    build: .
+    container_name: messaging_app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 3306
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./messaging_app:/app
+      - ./wait-for-it:/app/wait-for-it
+
+    command: ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+volumes:
+  mysql_data:
+```
+
+### Wait-for-it
+
+The **`wait-for-it`** script is used to ensure that the web service (Django application) does not start until the database (MySQL) is fully ready to accept connections. This is particularly useful in containerized environments, where services may take time to initialize.
+
+- The `wait-for-it.sh` script checks if the database is available at the specified address (`db:3306`). Once it confirms that the database is ready, it starts the Django application by running `python manage.py runserver`.
+
+To learn more about how `wait-for-it` works, you can visit [this repository](https://github.com/vishnubob/wait-for-it).
+
+## Notes
+- **Docker & Docker Compose**: Docker and Docker Compose simplify the deployment of the application by containerizing the web and database services. These tools allow you to easily run, scale, and manage your application with minimal configuration.
+- **Environment Variables**: Make sure to set the necessary environment variables in your `.env` file for both the web and db services to properly configure the MySQL database connection.
+- **Starting the Application**: You can use `docker-compose up` to start the entire application stack (both the Django app and MySQL). The `wait-for-it` script ensures the proper startup order.
+
+--- 
+
