@@ -10,13 +10,13 @@ COPY requirements.txt /app/
 # Install dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the Django project code into the container
-COPY . /app/
+# Copy the entire project code into the container
+COPY messaging_app /app/
 
 # Expose port 8000 for the Django app
 EXPOSE 8000
 
-# Set the environment variable to avoid Python writing .pyc files to disc
+# Set the environment variable to avoid Python writing .pyc files to disk
 ENV PYTHONUNBUFFERED 1
 
 # Run the Django app on port 8000
