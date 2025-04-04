@@ -166,6 +166,34 @@ volumes:
   mysql_data:
 ```
 
+### Kubernetes Scaling
+
+For deployment and scaling of the Django app in Kubernetes, we have added a script to scale the application using Kubernetes and perform load testing.
+
+#### Scaling the Deployment
+
+```bash
+#!/bin/bash
+
+# Scale the Django app deployment to 3 replicas
+echo "Scaling the Django app to 3 replicas..."
+kubectl scale deployment messaging-app-deployment --replicas=3
+
+# Verify that the deployment is scaled and multiple pods are running
+echo "Verifying that the app pods are running..."
+kubectl get pods
+
+# Perform load testing using wrk tool (ensure wrk is installed)
+echo "Starting load testing using wrk..."
+wrk -t12 -c400 -d30s http://<your-service-ip>:8000/
+
+# Monitor resource usage for the app and database pods
+echo "Monitoring resource usage..."
+kubectl top pods
+```
+
+This script scales the Django app to 3 replicas using Kubernetes, verifies the pods, performs load testing with `wrk`, and monitors resource usage for the application and database pods.
+
 ### Wait-for-it
 
 The **`wait-for-it`** script is used to ensure that the web service (Django application) does not start until the database (MySQL) is fully ready to accept connections. This is particularly useful in containerized environments, where services may take time to initialize.
@@ -176,7 +204,8 @@ To learn more about how `wait-for-it` works, you can visit [this repository](htt
 
 ## Notes
 - **Docker & Docker Compose**: Docker and Docker Compose simplify the deployment of the application by containerizing the web and database services. These tools allow you to easily run, scale, and manage your application with minimal configuration.
+- **Kubernetes**: With Kubernetes, you can scale your application by adjusting the number of replicas, ensuring high availability and fault tolerance.
 - **Environment Variables**: Make sure to set the necessary environment variables in your `.env` file for both the web and db services to properly configure the MySQL database connection.
 - **Starting the Application**: You can use `docker-compose up` to start the entire application stack (both the Django app and MySQL). The `wait-for-it` script ensures the proper startup order.
 
---- 
+---
