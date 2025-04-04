@@ -13,7 +13,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
 
   web:
     build: .
@@ -22,18 +22,16 @@ services:
     depends_on:
       - db
     environment:
-      DB_NAME: ${MYSQL_DATABASE}
-      DB_USER: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_HOST: db
-      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
     ports:
       - "8000:8000"
     volumes:
       - ./messaging_app:/app
       - ./wait-for-it:/app/wait-for-it
-
-    command: ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 volumes:
   mysql_data:

@@ -11,15 +11,13 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project code into the container
-COPY messaging_app /app/
+COPY . /app/
 
 # Expose port 8000 for the Django app
 EXPOSE 8000
 
 # Set the environment variable to avoid Python writing .pyc files to disk
 ENV PYTHONUNBUFFERED 1
-
-
 
 # Copy the wait-for-it.sh script
 COPY wait-for-it /app/
@@ -28,4 +26,4 @@ COPY wait-for-it /app/
 RUN chmod +x /app/wait-for-it.sh
 
 # Run the Django app, ensuring MySQL is ready first
-CMD ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["bash", "/app/wait-for-it/wait-for-it.sh", "db:3306",  "--timeout=60", "--strict", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
