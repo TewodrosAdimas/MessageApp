@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-db
+  template:
+    metadata:
+      labels:
+        app: messaging-db
+    spec:
+      containers:
+        - name: messaging-db
+          image: mysql:8.0
+          env:
+            - name: MYSQL_DATABASE
+              value: "${MYSQL_DATABASE}"
+            - name: MYSQL_USER
+              value: "${MYSQL_USER}"
+            - name: MYSQL_PASSWORD
+              value: "${MYSQL_PASSWORD}"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "${MYSQL_ROOT_PASSWORD}"
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          ports:
+            - containerPort: 3306
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-pvc  # Adjust as per your requirements, you may want to create a PVC if needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-db-service
+spec:
+  selector:
+    app: messaging-db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: messaging-app
+  template:
+    metadata:
+      labels:
+        app: messaging-app
+    spec:
+      containers:
+        - name: messaging-app
+          image: <your-docker-image>:<tag>  # Replace with your actual Docker image and tag
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_NAME
+              value: "${DB_NAME}"
+            - name: DB_USER
+              value: "${DB_USER}"
+            - name: DB_PASSWORD
+              value: "${DB_PASSWORD}"
+            - name: DB_HOST
+              value: "messaging-db-service"  # Name of MySQL service
+            - name: DB_PORT
+              value: "3306"
+          volumeMounts:
+            - name: app-volume
+              mountPath: /app
+            - name: wait-for-it-volume
+              mountPath: /app/wait-for-it
+      volumes:
+        - name: app-volume
+          hostPath:
+            path: ./messaging_app  # Adjust path if needed
+        - name: wait-for-it-volume
+          hostPath:
+            path: ./wait-for-it  # Adjust path if needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-app-service
+spec:
+  selector:
+    app: messaging-app
+  ports:
+    - protocol: TCP
+      port: 80  # Internal Kubernetes port
+      targetPort: 8000  # Django app port
+  clusterIP: None  # Internal Service (ClusterIP)
